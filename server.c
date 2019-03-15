@@ -3,7 +3,9 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <pthread.h>
+#include "server.h"
 
 #ifndef PORT
 #define PORT 8096
@@ -11,6 +13,8 @@
 
 #define MSG_LEN 1000
 #define MAX_CONNECTIONS 5
+
+ClientList *root, *last;
 
 int create_socket(int port)
 {
@@ -41,15 +45,29 @@ int create_socket(int port)
     return sfd;
 }
 
+void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
+    ClientList *tmp = root->link;
+    while (tmp != NULL) {
+        if (np->fd != tmp->fd) { // all clients except itself.
+            printf("Send to sockfd %d: \"%s\" \n", tmp->fd, tmp_buffer);
+            send(tmp->fd, tmp_buffer, MSG_LEN, 0);
+        }
+        tmp = tmp->link;
+    }
+}
+
+
 void *receive_messages(void *sfd)
 {
-    int socket_fd = *((int*) sfd);
+    int server_fd = *((int*) sfd);
     char message[MSG_LEN];
 
     memset(message, 0, MSG_LEN);
+    ClientList *np = (ClientList *)sfd;
 
-    while(recv(socket_fd, message, MSG_LEN, 0) > 0) {
+    while(recv(server_fd, message, MSG_LEN, 0) > 0) {
         printf("Message Received: %s\n", message);
+        send_to_all_clients(np,message);
         strcpy(message, "");
     }
 
@@ -58,22 +76,33 @@ void *receive_messages(void *sfd)
 
 int main()
 {
-    struct sockaddr_in addr;
+    struct sockaddr_in client_addr, server_addr;
     unsigned int socket_len;
-    int socket_fd;
-    int client;
+    int server_fd;
+    int client_fd;
     pthread_t tid;
 
-    socket_fd = create_socket(PORT);
-
+    server_fd = create_socket(PORT);
     socket_len = sizeof(struct sockaddr_in);
-    while((client = accept(socket_fd, (struct sockaddr*)&addr, &socket_len))) {
-        if(client < 0) {
+
+    getsockname(server_fd, (struct sockaddr*) &server_addr, (socklen_t*) &socket_len);
+    printf("Start Server on: %s:%d\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
+
+    root = newNode(server_fd, inet_ntoa(server_addr.sin_addr));
+    last = root;
+
+    while((client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &socket_len))) {
+        if(client_fd < 0) {
             perror("Error accepting connection");
             exit(1);
         }
 
-        int status = pthread_create(&tid, NULL, receive_messages, (void *)&client);
+        ClientList *c = newNode(client_fd, inet_ntoa(client_addr.sin_addr));
+        c->prev = last;
+        last->link = c;
+        last = c;
+
+        int status = pthread_create(&tid, NULL, receive_messages, (void *)&client_fd);
         if(status) {
             perror("Error creating thread");
             exit(1);
