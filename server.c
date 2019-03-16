@@ -57,15 +57,15 @@ void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
 }
 
 
-void *receive_messages(void *sfd)
+void *client_handler(void *client)
 {
-    int server_fd = *((int*) sfd);
+    int fd = *((int*) client);
     char message[MSG_LEN];
 
     memset(message, 0, MSG_LEN);
-    ClientList *np = (ClientList *)sfd;
+    ClientList *np = (ClientList *)client;
 
-    while(recv(server_fd, message, MSG_LEN, 0) > 0) {
+    while(recv(fd, message, MSG_LEN, 0) > 0) {
         printf("Message Received: %s\n", message);
         send_to_all_clients(np,message);
         strcpy(message, "");
@@ -102,7 +102,7 @@ int main()
         last->link = c;
         last = c;
 
-        int status = pthread_create(&tid, NULL, receive_messages, (void *)&client_fd);
+        int status = pthread_create(&tid, NULL, client_handler, (void *)c);
         if(status) {
             perror("Error creating thread");
             exit(1);
