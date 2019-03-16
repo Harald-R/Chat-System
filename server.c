@@ -48,7 +48,7 @@ int create_socket(int port)
 void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
     ClientList *tmp = root->link;
     while (tmp != NULL) {
-        if (np->fd != tmp->fd) { // all clients except itself.
+        if (np->fd != tmp->fd) { 
             printf("Send to sockfd %d: \"%s\" \n", tmp->fd, tmp_buffer);
             send(tmp->fd, tmp_buffer, MSG_LEN, 0);
         }

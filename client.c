@@ -4,6 +4,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+
 
 #ifndef IP
 #define IP "127.0.0.1"
@@ -43,13 +45,28 @@ int create_socket(char *ip, int port)
     return sfd;
 }
 
+void* receive_messages(void *sfd){
+    int socket_fd = *((int*) sfd);
+    char message[MSG_LEN] = {};
+    memset(message, 0, MSG_LEN);
+    while (recv(socket_fd, message, MSG_LEN, 0)) {
+        printf("\r%s\n", message);
+    }
+    return NULL;
+}
+
 int main()
 {
     int socket_fd;
     char message[MSG_LEN];
+    pthread_t tid;
 
     socket_fd = create_socket(IP, PORT);
-
+    int status = pthread_create(&tid, NULL, receive_messages, (void *)&socket_fd);
+    if (status) {
+        printf ("Error creating thread");
+        exit(1);
+    }
     while(1) {
         printf("Enter a message: ");
         fgets(message, MSG_LEN, stdin);

@@ -21,7 +21,7 @@ $(APP_SERVER): $(SRC_SERVER) Makefile
 	$(CC) $(CCOPT) -o $(APP_SERVER) $(SRC_SERVER) -lpthread
 
 $(APP_CLIENT): $(SRC_CLIENT) Makefile
-	$(CC) $(CCOPT) -o $(APP_CLIENT) $(SRC_CLIENT)
+	$(CC) $(CCOPT) -o $(APP_CLIENT) $(SRC_CLIENT) -lpthread
 
 .PHONY: clean
 clean:
