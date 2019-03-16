@@ -16,6 +16,7 @@
 #endif
 
 #define MSG_LEN 1000
+#define NAME_LEN 30
 
 int create_socket(char *ip, int port)
 {
@@ -50,7 +51,7 @@ void* receive_messages(void *sfd){
     char message[MSG_LEN] = {};
     memset(message, 0, MSG_LEN);
     while (recv(socket_fd, message, MSG_LEN, 0)) {
-        printf("\r%s\n", message);
+        printf("Message from another: %s\n", message);
     }
     return NULL;
 }
@@ -59,7 +60,16 @@ int main()
 {
     int socket_fd;
     char message[MSG_LEN];
+    char username[NAME_LEN]={};
+    memset(username, 0, NAME_LEN);
     pthread_t tid;
+
+    printf("Please enter your username: ");
+    fgets(username, NAME_LEN, stdin);
+    if (strlen(username) > NAME_LEN) {
+        printf("\nName must be more thirty characters.\n");
+        exit(1);
+    }    
 
     socket_fd = create_socket(IP, PORT);
     int status = pthread_create(&tid, NULL, receive_messages, (void *)&socket_fd);
@@ -67,8 +77,9 @@ int main()
         printf ("Error creating thread");
         exit(1);
     }
+
     while(1) {
-        printf("Enter a message: ");
+        printf("\nEnter a message:\n");
         fgets(message, MSG_LEN, stdin);
         send(socket_fd, message, strlen(message), 0);
     }
