@@ -68,7 +68,7 @@ void *client_handler(void *client)
     while(recv(fd, message, MSG_LEN, 0) > 0) {
         printf("Message Received: %s\n", message);
         send_to_all_clients(np,message);
-        strcpy(message, "");
+        memset(message, 0, MSG_LEN);
     }
 
     return NULL;
