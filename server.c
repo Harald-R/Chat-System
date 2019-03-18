@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include "server.h"
+#include "authentication.h"
 
 #ifndef PORT
 #define PORT 8096
@@ -56,19 +57,48 @@ void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
     }
 }
 
-
 void *client_handler(void *client)
 {
     int fd = *((int*) client);
     char message[MSG_LEN];
+    char message_with_username[MSG_LEN + 30];
 
     memset(message, 0, MSG_LEN);
     ClientList *np = (ClientList *)client;
 
-    while(recv(fd, message, MSG_LEN, 0) > 0) {
+    while (recv(fd, message, MSG_LEN, 0) > 0) {
         printf("Message Received: %s\n", message);
-        send_to_all_clients(np,message);
-        memset(message, 0, MSG_LEN);
+
+        enum MsgType msg_type = check_msg_type(message);
+        if (msg_type != REGULAR)
+        {
+            char type[30], username[30], password[30];
+            if (sscanf(message, "%[^:]:%[^:]:%[^:]", type, username, password) != 3) {
+                strcpy(message, "An error occurred\0");
+                send(fd, message, MSG_LEN, 0);
+                
+                perror("Error extracting information from message");
+                return NULL;
+            }
+
+            if (!authenticate(username, password)) {
+                strcpy(message, "SRV:LOGIN_FAIL");
+                send(fd, message, MSG_LEN, 0);
+                return NULL;
+            }
+
+            // Login successful
+            strcpy(np->username, username);
+            strcpy(message, "SRV:LOGIN_SUCCESS");
+            send(fd, message, MSG_LEN, 0);
+            memset(message, 0, MSG_LEN);
+        }
+        else
+        {
+            sprintf(message_with_username, "%s:%s", np->username, message);
+            send_to_all_clients(np, message_with_username);
+            memset(message, 0, MSG_LEN);
+        }
     }
 
     return NULL;

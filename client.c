@@ -16,7 +16,7 @@
 #endif
 
 #define MSG_LEN 1000
-#define NAME_LEN 30
+#define CREDENTIALS_LEN 30
 
 int create_socket(char *ip, int port)
 {
@@ -46,12 +46,28 @@ int create_socket(char *ip, int port)
     return sfd;
 }
 
-void* receive_messages(void *sfd){
+void *receive_messages(void *sfd){
     int socket_fd = *((int*) sfd);
     char message[MSG_LEN] = {};
     memset(message, 0, MSG_LEN);
+
+    char msg_sender[30];
+
     while (recv(socket_fd, message, MSG_LEN, 0)) {
-        printf("Message from another: %s\n", message);
+        // Check if the message is a reply from the server
+        if (strncmp(message, "SRV:", 4) == 0) {
+            if (strstr(message, "LOGIN_FAIL") != NULL) {
+                printf("Error authenticating\n");
+                exit(1);
+            } else if (strstr(message, "LOGIN_SUCCESS") != NULL) {
+                printf("Successful autentication!\n");
+            }
+        } else {
+            sscanf(message, "%[^:]", msg_sender);
+            char *message_content = message + (strlen(msg_sender) + 1);
+            printf("%s: %s\n", msg_sender, message_content);
+            memset(msg_sender, 0, sizeof(msg_sender));
+        }
     }
     return NULL;
 }
@@ -60,17 +76,29 @@ int main()
 {
     int socket_fd;
     char message[MSG_LEN];
-    char username[NAME_LEN]={};
-    memset(username, 0, NAME_LEN);
+    char username[CREDENTIALS_LEN];
+    char password[CREDENTIALS_LEN];
     pthread_t tid;
 
-    printf("Please enter your username: ");
-    fgets(username, NAME_LEN, stdin);
-    if (strlen(username) > NAME_LEN) {
-        printf("\nName must be more thirty characters.\n");
-        exit(1);
-    }    
+    memset(username, 0, CREDENTIALS_LEN);
+    memset(password, 0, CREDENTIALS_LEN);
 
+    // Prompt client for credentials
+    printf("Please enter your username: ");
+    fgets(username, CREDENTIALS_LEN, stdin);
+    if (strlen(username) > CREDENTIALS_LEN) {
+        printf("\nUsername cannot have more than thirty characters.\n");
+        exit(1);
+    }
+
+    printf("Please enter your password: ");
+    fgets(password, CREDENTIALS_LEN, stdin);
+    if (strlen(password) > CREDENTIALS_LEN) {
+        printf("\nPassword cannot have more than thirty characters.\n");
+        exit(1);
+    }
+
+    // Create socket and thread for receiving messages
     socket_fd = create_socket(IP, PORT);
     int status = pthread_create(&tid, NULL, receive_messages, (void *)&socket_fd);
     if (status) {
@@ -78,9 +106,21 @@ int main()
         exit(1);
     }
 
-    while(1) {
+    // Send username and password
+    if (username[strlen(username) - 1] == '\n') username[strlen(username) - 1] = '\0'; 
+    if (password[strlen(password) - 1] == '\n') password[strlen(password) - 1] = '\0'; 
+
+    sprintf(message, "%s:%s:%s", "login", username, password);
+    if (send(socket_fd, message, strlen(message), 0) < 0) {
+        perror("Error sending credentials");
+        exit(1);
+    }
+
+    // Allow user to send messages
+    while (1) {
         printf("\nEnter a message:\n");
         fgets(message, MSG_LEN, stdin);
+        if (message[strlen(message)-1] == '\n') message[strlen(message)-1] = '\0';
         send(socket_fd, message, strlen(message), 0);
     }
 }

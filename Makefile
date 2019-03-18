@@ -1,10 +1,11 @@
 CC = gcc
-CCOPT = -Wall
+CCOPT = -Wall -Wextra
 
 SRC_SERVER = server.c
 SRC_CLIENT = client.c
 APP_SERVER = server
 APP_CLIENT = client
+SRCS = authentication.c
 
 .DEFAULT_GOAL := all
 
@@ -17,11 +18,11 @@ run_client: $(APP_CLIENT)
 	./$(APP_CLIENT)
 
 
-$(APP_SERVER): $(SRC_SERVER) Makefile
-	$(CC) $(CCOPT) -o $(APP_SERVER) $(SRC_SERVER) -lpthread
+$(APP_SERVER): $(SRC_SERVER) $(SRCS) Makefile
+	$(CC) $(CCOPT) -o $@ $(SRC_SERVER) $(SRCS) -lpthread
 
-$(APP_CLIENT): $(SRC_CLIENT) Makefile
-	$(CC) $(CCOPT) -o $(APP_CLIENT) $(SRC_CLIENT) -lpthread
+$(APP_CLIENT): $(SRC_CLIENT) $(SRCS) Makefile
+	$(CC) $(CCOPT) -o $@ $(SRC_CLIENT) $(SRCS) -lpthread
 
 .PHONY: clean
 clean:
