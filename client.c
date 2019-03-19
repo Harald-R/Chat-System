@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include "utils.h"
 
+const char *user_prompt = "> ";
+
 int create_socket(char *ip, int port)
 {
     int sfd;
@@ -63,7 +65,7 @@ void *receive_messages(void *sfd){
         } else {
             sscanf(message, "%[^:]", msg_sender);
             char *message_content = message + (strlen(msg_sender) + 1);
-            printf("%s: %s\n", msg_sender, message_content);
+            printf("\r%s: %s\n", msg_sender, message_content);
             memset(msg_sender, 0, sizeof(msg_sender));
         }
     }
@@ -120,7 +122,7 @@ int main()
 
     // Allow user to send messages
     while (1) {
-        printf("\nEnter a message:\n");
+        printf("%s", user_prompt);
         fgets(message, MSG_LEN, stdin);
         if (message[strlen(message)-1] == '\n') message[strlen(message)-1] = '\0';
     
