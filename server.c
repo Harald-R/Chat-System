@@ -100,15 +100,15 @@ void close_server()
     }
 }
 
-void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
-    ClientList *tmp = root->link;
+void send_to_all_clients(ClientList *np, char client_buffer[]) {
+    ClientList *client = root->link;
 
-    while (tmp != NULL) {
-        if (np->fd != tmp->fd) { 
-            printf("Send to sockfd %d: \"%s\" \n", tmp->fd, tmp_buffer);
-            send(tmp->fd, tmp_buffer, MSG_LEN, 0);
+    while (client != NULL) {
+        if (np->fd != client->fd) { 
+            printf("Send to client %d: %s\n", client->fd, client_buffer);
+            send(client->fd, client_buffer, MSG_LEN, 0);
         }
-        tmp = tmp->link;
+        client = client->link;
     }
 }
 
