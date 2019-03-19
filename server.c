@@ -63,6 +63,8 @@ void remove_client(int fd)
 
             break;
         }
+
+        client = client->link;
     }
 }
 
@@ -108,7 +110,6 @@ void *client_handler(void *client)
     while (1) {
         n = recv(fd, message, MSG_LEN, 0);
         if (n == 0) {
-            printf ("Client disconnected: %d\n", fd);
             disconnect_client(fd);
             return NULL;
         }
@@ -134,6 +135,7 @@ void *client_handler(void *client)
             }
 
             // Login successful
+            printf ("Client connected: %d\n", fd);
             strcpy(np->username, username);
             strcpy(message, "SRV:LOGIN_SUCCESS");
             send(fd, message, MSG_LEN, 0);
