@@ -4,7 +4,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <poll.h>
 #include <pthread.h>
+#include <unistd.h>
 #include "server.h"
 #include "authentication.h"
 #include "utils.h"
@@ -40,8 +42,40 @@ int create_socket(int port)
     return sfd;
 }
 
+void remove_client(int fd)
+{
+    ClientList *client = root->link;
+
+    while (client != NULL) {
+        if (client->fd == fd) {
+            if (root == client)
+                root = client->link;
+            if (last == client)
+                last = client->prev;
+
+            if (client->prev != NULL)
+                client->prev->link = client->link;
+
+            if (client->link != NULL)
+                client->link->prev = client->prev;
+
+            free(client);
+
+            break;
+        }
+    }
+}
+
+void disconnect_client(int fd)
+{
+    printf ("Client disconnected: %d\n", fd);
+    remove_client(fd);
+    close(fd);
+}
+
 void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
     ClientList *tmp = root->link;
+
     while (tmp != NULL) {
         if (np->fd != tmp->fd) { 
             printf("Send to sockfd %d: \"%s\" \n", tmp->fd, tmp_buffer);
@@ -53,6 +87,7 @@ void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
 
 void *client_handler(void *client)
 {
+    int n;
     int fd = *((int*) client);
     char message[MSG_LEN];
     char message_with_username[MSG_LEN + 30];
@@ -60,7 +95,23 @@ void *client_handler(void *client)
     memset(message, 0, MSG_LEN);
     ClientList *np = (ClientList *)client;
 
-    while (recv(fd, message, MSG_LEN, 0) > 0) {
+    /*
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLIN | POLLHUP;
+    pfd.revents = 0;
+
+    while (poll(&pfd, 1, TIMEOUT) > 0) {
+        if (recv(fd, message, MSG_LEN, MSG_DONTWAIT) == 0) {
+    */
+
+    while (1) {
+        n = recv(fd, message, MSG_LEN, 0);
+        if (n == 0) {
+            printf ("Client disconnected: %d\n", fd);
+            disconnect_client(fd);
+            return NULL;
+        }
         printf("Message Received: %s\n", message);
 
         enum MsgType msg_type = check_msg_type(message);
@@ -78,6 +129,7 @@ void *client_handler(void *client)
             if (!authenticate(username, password)) {
                 strcpy(message, "SRV:LOGIN_FAIL");
                 send(fd, message, MSG_LEN, 0);
+                disconnect_client(fd);
                 return NULL;
             }
 
@@ -111,7 +163,7 @@ int main()
 
     getsockname(server_fd, (struct sockaddr*) &server_addr, (socklen_t*) &socket_len);
     printf("Start Server on: %s:%d\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
-
+    
     root = newNode(server_fd, inet_ntoa(server_addr.sin_addr));
     last = root;
 

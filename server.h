@@ -1,5 +1,8 @@
-#ifndef LIST
-#define LIST
+#ifndef _H_SERVER 
+#define _H_SERVER
+
+#include <string.h>
+#include <stdlib.h>
 
 typedef struct ClientNode {
     int fd;

@@ -8,13 +8,15 @@
 #endif
 
 #ifndef PORT
-#define PORT 8098
+#define PORT 8096
 #endif
 
 #define MSG_LEN 1000
 #define CREDENTIALS_LEN 30
 
 #define MAX_CONNECTIONS 5
+
+#define TIMEOUT 100
 
 unsigned long hash(const char *);
 char *clear_newline_terminator(char *);
