@@ -138,6 +138,8 @@ int main()
         fgets(message, MSG_LEN, stdin);
         strcpy(message, clear_newline_terminator(message));
     
-        send(socket_fd, message, strlen(message), 0);
+        if (strlen(message) > 0)
+            send(socket_fd, message, strlen(message), 0);
+        memset(message, 0, MSG_LEN);
     }
 }

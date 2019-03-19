@@ -18,7 +18,6 @@ run_server: $(APP_SERVER)
 run_client: $(APP_CLIENT)
 	./$(APP_CLIENT)
 
-
 $(APP_SERVER): $(SRC_SERVER) $(SRCS) $(HEADERS) Makefile
 	$(CC) $(CCOPT) -o $@ $(SRC_SERVER) $(SRCS) -lpthread
 

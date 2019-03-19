@@ -106,7 +106,7 @@ void send_to_all_clients(ClientList *np, char client_buffer[]) {
     while (client != NULL) {
         if (np->fd != client->fd) { 
             printf("Send to client %d: %s\n", client->fd, client_buffer);
-            send(client->fd, client_buffer, MSG_LEN, 0);
+            send(client->fd, client_buffer, MSG_LEN_EXTENDED, 0);
         }
         client = client->link;
     }
@@ -215,7 +215,7 @@ int main()
 
     getsockname(server_fd, (struct sockaddr*) &server_addr, (socklen_t*) &socket_len);
     printf("Started server on: %s:%d\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
-    
+
     root = newNode(server_fd, inet_ntoa(server_addr.sin_addr));
     last = root;
 
