@@ -6,6 +6,7 @@ SRC_CLIENT = client.c
 APP_SERVER = server
 APP_CLIENT = client
 SRCS = authentication.c utils.c
+HEADERS = $(wildcard *.h)
 
 .DEFAULT_GOAL := all
 
@@ -18,10 +19,10 @@ run_client: $(APP_CLIENT)
 	./$(APP_CLIENT)
 
 
-$(APP_SERVER): $(SRC_SERVER) $(SRCS) Makefile
+$(APP_SERVER): $(SRC_SERVER) $(SRCS) $(HEADERS) Makefile
 	$(CC) $(CCOPT) -o $@ $(SRC_SERVER) $(SRCS) -lpthread
 
-$(APP_CLIENT): $(SRC_CLIENT) $(SRCS) Makefile
+$(APP_CLIENT): $(SRC_CLIENT) $(SRCS) $(HEADERS) Makefile
 	$(CC) $(CCOPT) -o $@ $(SRC_CLIENT) $(SRCS) -lpthread
 
 .PHONY: clean

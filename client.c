@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <unistd.h>
 #include "utils.h"
 
 int create_socket(char *ip, int port)
@@ -41,8 +42,16 @@ void *receive_messages(void *sfd){
     memset(message, 0, MSG_LEN);
 
     char msg_sender[30];
+    int n;
 
-    while (recv(socket_fd, message, MSG_LEN, 0)) {
+    while (1) {
+        n = recv(socket_fd, message, MSG_LEN, 0);
+        if (n == 0) {
+            printf("Lost connection to server\n");
+            close(socket_fd);
+            exit(1);
+        }
+
         // Check if the message is a reply from the server
         if (strncmp(message, "SRV:", 4) == 0) {
             if (strstr(message, "LOGIN_FAIL") != NULL) {
@@ -114,6 +123,7 @@ int main()
         printf("\nEnter a message:\n");
         fgets(message, MSG_LEN, stdin);
         if (message[strlen(message)-1] == '\n') message[strlen(message)-1] = '\0';
+    
         send(socket_fd, message, strlen(message), 0);
     }
 }
