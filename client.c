@@ -115,8 +115,8 @@ int main()
     }
 
     // Send username and password
-    if (username[strlen(username) - 1] == '\n') username[strlen(username) - 1] = '\0'; 
-    if (password[strlen(password) - 1] == '\n') password[strlen(password) - 1] = '\0'; 
+    strcpy(username, clear_newline_terminator(username));
+    strcpy(password, clear_newline_terminator(password));
 
     sprintf(message, "%s:%s:%s", "login", username, password);
     if (send(socket_fd, message, strlen(message), 0) < 0) {
@@ -128,7 +128,7 @@ int main()
     while (1) {
         printf("%s", user_prompt);
         fgets(message, MSG_LEN, stdin);
-        if (message[strlen(message)-1] == '\n') message[strlen(message)-1] = '\0';
+        strcpy(message, clear_newline_terminator(message));
     
         send(socket_fd, message, strlen(message), 0);
     }
