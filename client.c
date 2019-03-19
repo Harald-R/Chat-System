@@ -10,6 +10,12 @@
 
 const char *user_prompt = "> ";
 
+void print_prompt()
+{
+    printf("\r%s ", user_prompt);
+    fflush(stdout);
+}
+
 int create_socket(char *ip, int port)
 {
     int sfd;
@@ -57,12 +63,13 @@ void *receive_messages(void *sfd){
         // Check if the message is a reply from the server
         if (strncmp(message, "SRV:", 4) == 0) {
             if (strstr(message, "LOGIN_FAIL") != NULL) {
-                printf("Error authenticating\n");
+                printf("\rError authenticating\n");
                 exit(1);
             } else if (strstr(message, "LOGIN_SUCCESS") != NULL) {
-                printf("Successful autentication!\n");
+                printf("\rSuccessful autentication!\n");
+                print_prompt();
             } else if (strstr(message, "ERROR") != NULL) {
-                printf("Error authenticating\n");
+                printf("\rError authenticating\n");
                 //printf("Error occurred\n");
                 exit(1);
             }
@@ -70,6 +77,7 @@ void *receive_messages(void *sfd){
             sscanf(message, "%[^:]", msg_sender);
             char *message_content = message + (strlen(msg_sender) + 1);
             printf("\r%s: %s\n", msg_sender, message_content);
+            print_prompt();
             memset(msg_sender, 0, sizeof(msg_sender));
         }
     }
@@ -126,7 +134,7 @@ int main()
 
     // Allow user to send messages
     while (1) {
-        printf("%s", user_prompt);
+        print_prompt();
         fgets(message, MSG_LEN, stdin);
         strcpy(message, clear_newline_terminator(message));
     
