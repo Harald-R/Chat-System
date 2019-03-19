@@ -21,6 +21,9 @@ bool authenticate(const char *username, const char *password)
     bool correctUserName = false;
     bool correctPassword = false;
 
+    if (strlen(username) == 0 || strlen(password) == 0)
+        return false;
+
     FILE *dbFile = openFile(DB_FILE, "r");
 
     /* read line by line from file */
@@ -88,12 +91,12 @@ enum MsgType check_msg_type(const char *message)
 {
     char type[10], username[30], password[30];
     int n;
-    
+
     if (strncmp(message, "reg:", 4) == 0 || strncmp(message, "login:", 6) == 0) {
         n = sscanf(message, "%[^:]:%[^:]:%[^:]", type, username, password);
+        if (strlen(username) == 0 || strlen(password) == 0)
+                return ERROR;
         if (n == 3) {
-            if (strlen(username) == 0 || strlen(password) == 0)
-                return REGULAR;
             if (strcmp(type, "reg") == 0)
                 return REGISTER;
             if (strcmp(type, "login") == 0)

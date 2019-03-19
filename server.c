@@ -118,6 +118,13 @@ void *client_handler(void *client)
         enum MsgType msg_type = check_msg_type(message);
         if (msg_type != REGULAR)
         {
+            if (msg_type == ERROR) {
+                strcpy(message, "SRV:ERROR");
+                send(fd, message, MSG_LEN, 0);
+                disconnect_client(fd);
+                return NULL;
+            }
+
             char type[30], username[30], password[30];
             if (sscanf(message, "%[^:]:%[^:]:%[^:]", type, username, password) != 3) {
                 strcpy(message, "An error occurred\0");

@@ -9,6 +9,7 @@
 #define DB_FILE "data.txt"
 
 enum MsgType {
+    ERROR,
     REGULAR,
     REGISTER,
     LOGIN

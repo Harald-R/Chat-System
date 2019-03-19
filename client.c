@@ -61,6 +61,10 @@ void *receive_messages(void *sfd){
                 exit(1);
             } else if (strstr(message, "LOGIN_SUCCESS") != NULL) {
                 printf("Successful autentication!\n");
+            } else if (strstr(message, "ERROR") != NULL) {
+                printf("Error authenticating\n");
+                //printf("Error occurred\n");
+                exit(1);
             }
         } else {
             sscanf(message, "%[^:]", msg_sender);
