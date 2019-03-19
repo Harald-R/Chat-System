@@ -19,6 +19,8 @@
 
 #define TIMEOUT 100
 
+#define UNUSED(x) (void)(x)
+
 unsigned long hash(const char *);
 char *clear_newline_terminator(char *);
 

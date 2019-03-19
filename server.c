@@ -7,6 +7,7 @@
 #include <poll.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <signal.h>
 #include "server.h"
 #include "authentication.h"
 #include "utils.h"
@@ -27,6 +28,11 @@ int create_socket(int port)
     if(sfd < 0) {
         perror("Error creating socket");
         exit(1);
+    }
+
+    int enable = 1;
+    if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+        printf("Could not set SO_REUSEADDR for socket\n");
     }
 
     if(bind(sfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
@@ -73,6 +79,25 @@ void disconnect_client(int fd)
     printf ("Client disconnected: %d\n", fd);
     remove_client(fd);
     close(fd);
+}
+
+void disconnect_all_clients()
+{
+    ClientList *client = root->link;
+    while (client != NULL) {
+        disconnect_client(client->fd);
+        client = client->link;
+    }
+}
+
+void close_server()
+{
+    ClientList *server = root;
+    if (server != NULL) {
+        printf ("Server closed: %d\n", server->fd);
+        remove_client(server->fd);
+        close(server->fd);
+    }
 }
 
 void send_to_all_clients(ClientList *np, char tmp_buffer[]) {
@@ -158,6 +183,18 @@ void *client_handler(void *client)
     return NULL;
 }
 
+void handler_SIGINT(int sig_num, siginfo_t *si, void *unused)
+{
+    UNUSED(sig_num);
+    UNUSED(si);
+    UNUSED(unused);
+
+    disconnect_all_clients();
+    close_server();
+
+    exit(0);
+}
+
 int main()
 {
     struct sockaddr_in client_addr, server_addr;
@@ -166,11 +203,18 @@ int main()
     int client_fd;
     pthread_t tid;
 
+    struct sigaction sa;
+    sa.sa_sigaction = handler_SIGINT;
+    if (sigaction(SIGINT, &sa, NULL) < 0) {
+        perror("Error handling SIGINT signal");
+        exit(1);
+    }
+
     server_fd = create_socket(PORT);
     socket_len = sizeof(struct sockaddr_in);
 
     getsockname(server_fd, (struct sockaddr*) &server_addr, (socklen_t*) &socket_len);
-    printf("Start Server on: %s:%d\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
+    printf("Started server on: %s:%d\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
     
     root = newNode(server_fd, inet_ntoa(server_addr.sin_addr));
     last = root;
