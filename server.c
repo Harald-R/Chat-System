@@ -7,13 +7,7 @@
 #include <pthread.h>
 #include "server.h"
 #include "authentication.h"
-
-#ifndef PORT
-#define PORT 8096
-#endif
-
-#define MSG_LEN 1000
-#define MAX_CONNECTIONS 5
+#include "utils.h"
 
 ClientList *root, *last;
 

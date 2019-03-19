@@ -5,7 +5,7 @@ SRC_SERVER = server.c
 SRC_CLIENT = client.c
 APP_SERVER = server
 APP_CLIENT = client
-SRCS = authentication.c
+SRCS = authentication.c utils.c
 
 .DEFAULT_GOAL := all
 

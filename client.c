@@ -5,18 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-
-
-#ifndef IP
-#define IP "127.0.0.1"
-#endif
-
-#ifndef PORT
-#define PORT 8096
-#endif
-
-#define MSG_LEN 1000
-#define CREDENTIALS_LEN 30
+#include "utils.h"
 
 int create_socket(char *ip, int port)
 {
@@ -97,6 +86,10 @@ int main()
         printf("\nPassword cannot have more than thirty characters.\n");
         exit(1);
     }
+
+    strcpy(password, clear_newline_terminator(password));
+    unsigned long passHashed = hash(password);
+    sprintf(password, "%lu", passHashed);
 
     // Create socket and thread for receiving messages
     socket_fd = create_socket(IP, PORT);

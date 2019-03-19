@@ -2,17 +2,6 @@
 
 const char *delimiter = ":";
 
-unsigned long hash(const char *str)
-{
-    unsigned long hash = 5381;
-    int c;
-
-    while ((c = *str++) != 0)
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-
-    return hash;
-}
-
 FILE *openFile(const char *fileName, const char *mode)
 {
     FILE* fileDescriptor = fopen(fileName, mode);
@@ -56,17 +45,15 @@ bool authenticate(const char *username, const char *password)
 
             if (correctUserName == true)
             {
-                /* do hash function for the user's password */
-                unsigned long userPassword = hash(password);
+                unsigned long userPassword = atol(password);
 
                 /* get the password from the current line */
                 ptr = ptr + strlen(ptr) + strlen(delimiter);
                 ptr = strtok(ptr, endOfLineDelimitator);
 
                 /* convert the resulted password to the unsigned long type */
-                char *stringPart=(char*)malloc(sizeof(char));
-                unsigned long rez= strtoul(ptr, &stringPart, 10);
-                   
+                unsigned long rez = atol(ptr);
+
                 if (userPassword == rez)
                 {
                     correctPassword = true;
