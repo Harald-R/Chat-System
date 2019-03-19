@@ -48,6 +48,19 @@ int create_socket(int port)
     return sfd;
 }
 
+int check_if_user_connected(const char *username)
+{
+    ClientList *client = root->link;
+    while(client != NULL) {
+        if(strcmp(client->username, username) == 0) {
+            return 1;
+        }
+        client = client->link;
+    }
+
+    return 0;
+}
+
 void remove_client(int fd)
 {
     ClientList *client = root->link;
@@ -159,7 +172,7 @@ void *client_handler(void *client)
                 return NULL;
             }
 
-            if (!authenticate(username, password)) {
+            if (!authenticate(username, password) || check_if_user_connected(username)) {
                 strcpy(message, "SRV:LOGIN_FAIL");
                 send(fd, message, MSG_LEN, 0);
                 disconnect_client(fd);
