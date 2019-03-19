@@ -92,7 +92,7 @@ void *client_handler(void *client)
     int n;
     int fd = *((int*) client);
     char message[MSG_LEN];
-    char message_with_username[MSG_LEN + 30];
+    char message_with_username[MSG_LEN_EXTENDED];
 
     memset(message, 0, MSG_LEN);
     ClientList *np = (ClientList *)client;
@@ -146,14 +146,13 @@ void *client_handler(void *client)
             strcpy(np->username, username);
             strcpy(message, "SRV:LOGIN_SUCCESS");
             send(fd, message, MSG_LEN, 0);
-            memset(message, 0, MSG_LEN);
         }
         else
         {
             sprintf(message_with_username, "%s:%s", np->username, message);
             send_to_all_clients(np, message_with_username);
-            memset(message, 0, MSG_LEN);
         }
+        memset(message, 0, MSG_LEN);
     }
 
     return NULL;

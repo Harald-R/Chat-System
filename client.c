@@ -40,14 +40,14 @@ int create_socket(char *ip, int port)
 
 void *receive_messages(void *sfd){
     int socket_fd = *((int*) sfd);
-    char message[MSG_LEN] = {};
-    memset(message, 0, MSG_LEN);
+    char message[MSG_LEN_EXTENDED];
+    memset(message, 0, MSG_LEN_EXTENDED);
 
     char msg_sender[30];
     int n;
 
     while (1) {
-        n = recv(socket_fd, message, MSG_LEN, 0);
+        n = recv(socket_fd, message, MSG_LEN_EXTENDED, 0);
         if (n == 0) {
             printf("Lost connection to server\n");
             close(socket_fd);
